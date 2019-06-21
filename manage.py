@@ -20,9 +20,7 @@ class ParameterStore:
         else:
             nextToken = None
         while nextToken is not None:
-            response = self.client.describe_parameters(
-                NextToken=nextToken
-            )
+            response = self.client.describe_parameters(NextToken=nextToken)
             if 'NextToken' in response:
                 nextToken = response['NextToken']
             else:
@@ -33,18 +31,12 @@ class ParameterStore:
     def delete_parameters(self, file):
         f = open(file, "r")
         kv = json.load(f)
-        response = self.client.delete_parameters(
-            Names=list(kv.keys())
-        )
-        print("The following parameters have been deleted: ",
-              response['DeletedParameters'])
+        response = self.client.delete_parameters(Names=list(kv.keys()))
+        print("The following parameters have been deleted: ", response['DeletedParameters'])
         return
 
     def get_parameter_value(self, param):
-        response = self.client.get_parameter(
-            Name=param,
-            WithDecryption=True
-        )
+        response = self.client.get_parameter(Name=param, WithDecryption=True)
         return response['Parameter']['Value']
 
     def put_parameter(self, key, value, kms_key):
@@ -53,24 +45,11 @@ class ParameterStore:
         except botocore.exceptions.ClientError as e:
             if e.response.get("Error").get("Code") == "ParameterNotFound":
                 if kms_key is None:
-                    self.client.put_parameter(
-                        Name=key,
-                        Type='String',
-                        Value=value
-                    )
+                    self.client.put_parameter(Name=key, Type='String', Value=value)
                 elif kms_key == "default":
-                    self.client.put_parameter(
-                        Name=key,
-                        Type='SecureString',
-                        Value=value
-                    )
+                    self.client.put_parameter(Name=key, Type='SecureString', Value=value)
                 else:
-                    self.client.put_parameter(
-                        Name=key,
-                        Type='SecureString',
-                        KeyId=kms_key,
-                        Value=value
-                    )
+                    self.client.put_parameter(Name=key, Type='SecureString', KeyId=kms_key, Value=value)
                 print("Parameter %s has been added" % key)
                 exit(0)
             else:
@@ -79,27 +58,11 @@ class ParameterStore:
             print("No update for", key)
         else:
             if kms_key is None:
-                self.client.put_parameter(
-                    Name=key,
-                    Overwrite=True,
-                    Type='String',
-                    Value=value
-                )
+                self.client.put_parameter(Name=key, Overwrite=True, Type='String', Value=value)
             elif kms_key == "default":
-                self.client.put_parameter(
-                    Name=key,
-                    Overwrite=True,
-                    Type='SecureString',
-                    Value=value
-                )
+                self.client.put_parameter(Name=key, Overwrite=True, Type='SecureString', Value=value)
             else:
-                self.client.put_parameter(
-                    Name=key,
-                    Overwrite=True,
-                    Type='SecureString',
-                    KeyId=kms_key,
-                    Value=value
-                )
+                self.client.put_parameter(Name=key, Overwrite=True, Type='SecureString', KeyId=kms_key, Value=value)
             print("Parameter %s has been updated" % key)
 
     def put_parameters(self, file, kms_key):
@@ -109,11 +72,7 @@ class ParameterStore:
             self.put_parameter(key, value, kms_key)
 
     def get_parameters_by_path(self, path='/'):
-        response = self.client.get_parameters_by_path(
-            Path=path,
-            Recursive=True,
-            WithDecryption=True
-        )
+        response = self.client.get_parameters_by_path(Path=path, Recursive=True, WithDecryption=True)
         parameters = response['Parameters']
         if 'NextToken' in response:
             nextToken = response['NextToken']
@@ -141,9 +100,7 @@ def usage():
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(
-            argv, "he:i:k:d:",
-            ["help", "export=", "import=", 'key=', "delete="])
+        opts, args = getopt.getopt(argv, "he:i:k:d:", ["help", "export=", "import=", 'key=', "delete="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
