@@ -33,7 +33,6 @@ class ParameterStore:
         kv = json.load(f)
         response = self.client.delete_parameters(Names=list(kv.keys()))
         print("The following parameters have been deleted: ", response['DeletedParameters'])
-        return
 
     def get_parameter_value(self, param):
         response = self.client.get_parameter(Name=param, WithDecryption=True)
@@ -51,7 +50,7 @@ class ParameterStore:
                 else:
                     self.client.put_parameter(Name=key, Type='SecureString', KeyId=kms_key, Value=value)
                 print("Parameter %s has been added" % key)
-                exit(0)
+                return
             else:
                 raise e
         if value == current_value and kms_key is None:
@@ -95,7 +94,7 @@ class ParameterStore:
 
 
 def usage():
-    print('Usage: manage.py --export <parameterpath> | --import <file> | --key <kmskeyid> | --delete')
+    print('Usage: manage.py --export <parameterpath> | --import <file> | --key <kmskeyid> | --delete <file>')
 
 
 def main(argv):
