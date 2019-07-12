@@ -1,9 +1,8 @@
+import argparse
 import boto3
 import botocore
 import numpy as np
 import json
-import sys
-import getopt
 
 
 class ParameterStore:
@@ -93,50 +92,40 @@ class ParameterStore:
         return json.dumps(kv, indent=4, sort_keys=True)
 
 
-def usage():
-    print('Usage: manage.py --export <parameterpath> | --import <file> | --key <kmskeyid> | --delete <file>')
+def main():
+    parser = argparse.ArgumentParser(description='Manage parameters of AWS Parameter Store')
+    parser.add_argument(
+        '--export', '-e', metavar='<PARAMETER PATH>', type=str,
+        required=False, help='Export parameters of AWS Parameter Store')
+    parser.add_argument(
+        '--upload', '-i', metavar='<FILE>', type=str,
+        required=False, help='Import a JSON file into AWS Parameter Store')
+    parser.add_argument(
+        '--key', '-k', metavar='<KMS KEY>', type=str,
+        required=False, help='KMS key alias or id used to read/create parameters in AWS Parameter Store')
+    parser.add_argument(
+        '--delete', '-d', metavar='<FILE>', type=str,
+        required=False, help='Delete the parameters of the JSON file in AWS Parameter Store')
 
+    args = parser.parse_args()
 
-def main(argv):
-    try:
-        opts, args = getopt.getopt(argv, "he:i:k:d:", ["help", "export=", "import=", 'key=', "delete="])
-    except getopt.GetoptError:
-        usage()
-        sys.exit(2)
-    action = None
-    action_arg = None
-    key = None
-    for opt, arg in opts:
-        if opt in ("help", "-h"):
-            usage()
-            sys.exit()
-        elif opt in ("--export", "-e"):
-            action = "export"
-            action_arg = arg
-        elif opt in ("--import", "-i"):
-            action = "import"
-            action_arg = arg
-        elif opt in ("--key", "-k"):
-            key = arg
-        elif opt in ("--delete", "-d"):
-            action = "delete"
-            action_arg = arg
-        else:
-            usage()
-            sys.exit()
+    if args.export:
+        store = ParameterStore()
+        print(store.get_parameters_by_path(args.export))
+        exit(0)
 
-    if action == "export":
+    if args.upload:
         store = ParameterStore()
-        print(store.get_parameters_by_path(action_arg))
-    elif action == "import":
+        store.put_parameters(args.upload, args.key)
+        exit(0)
+
+    if args.delete:
         store = ParameterStore()
-        store.put_parameters(action_arg, key)
-    elif action == "delete":
-        store = ParameterStore()
-        store.delete_parameters(action_arg)
-    else:
-        usage()
+        store.delete_parameters(args.delete)
+        exit(0)
+
+    parser.print_help()
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
