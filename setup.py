@@ -1,15 +1,32 @@
+import codecs
+import os.path
+import re
 from setuptools import setup, find_packages
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+
+def read(*parts):
+    return codecs.open(os.path.join(here, *parts), 'r').read()
+
+
+def find_version(*file_paths):
+    version_file = read(*file_paths)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
 
 setup(
     name="aws-parameter-store",
-    version="1.0.0",
+    version=find_version("aws_parameter_store", "__init__.py"),
     author="Jeremie Tharaud",
     author_email="jeremie.tharaud@gmail.com",
     description="A tool for managing AWS Parameter Store",
-    long_description=long_description,
+    long_description=read('README.md'),
     long_description_content_type="text/markdown",
     url="https://github.com/jeremietharaud/aws-parameter-store-tooling",
     packages=find_packages(),
