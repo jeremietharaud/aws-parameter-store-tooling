@@ -43,7 +43,7 @@ class ParameterStore:
         except botocore.exceptions.ClientError as e:
             if e.response.get("Error").get("Code") == "ParameterNotFound":
                 if kms_key is None:
-                    if value[0]:
+                    if type(value) is list:
                         self.client.put_parameter(Name=key, Type='StringList', Value=value[0])
                     else:
                         self.client.put_parameter(Name=key, Type='String', Value=value)
@@ -59,7 +59,7 @@ class ParameterStore:
             print("No update for", key)
         else:
             if kms_key is None:
-                if value[0]:
+                if type(value) is list:
                     self.client.put_parameter(Name=key, Overwrite=True, Type='StringList', Value=value[0])
                 else:
                     self.client.put_parameter(Name=key, Overwrite=True, Type='String', Value=value)
