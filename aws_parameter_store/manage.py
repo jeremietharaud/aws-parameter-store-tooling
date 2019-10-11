@@ -12,19 +12,11 @@ class ParameterStore:
         self.client = boto3.client('ssm')
 
     def describe_parameters(self):
-        response = self.client.describe_parameters()
-        parameters = response['Parameters']
-        if 'NextToken' in response:
-            nextToken = response['NextToken']
-        else:
-            nextToken = None
-        while nextToken is not None:
-            response = self.client.describe_parameters(NextToken=nextToken)
-            if 'NextToken' in response:
-                nextToken = response['NextToken']
-            else:
-                nextToken = None
-            parameters = np.concatenate((parameters, response['Parameters']))
+        paginator = self.client.get_paginator('describe_parameters')
+        pages = paginator.paginate()
+        parameters = []
+        for page in pages:
+            parameters = np.concatenate((parameters, page['Parameters']))
         return parameters
 
     def delete_parameters(self, file):
@@ -76,24 +68,11 @@ class ParameterStore:
             self.put_parameter(key, value, kms_key)
 
     def get_parameters_by_path(self, path='/'):
-        response = self.client.get_parameters_by_path(Path=path, Recursive=True, WithDecryption=True)
-        parameters = response['Parameters']
-        if 'NextToken' in response:
-            nextToken = response['NextToken']
-        else:
-            nextToken = None
-        while nextToken is not None:
-            response = self.client.get_parameters_by_path(
-                Path=path,
-                Recursive=True,
-                WithDecryption=True,
-                NextToken=nextToken
-            )
-            if 'NextToken' in response:
-                nextToken = response['NextToken']
-            else:
-                nextToken = None
-            parameters = np.concatenate((parameters, response['Parameters']))
+        paginator = self.client.get_paginator('get_parameters_by_path')
+        pages = paginator.paginate(Path=path, Recursive=True, WithDecryption=True)
+        parameters = []
+        for page in pages:
+            parameters = np.concatenate((parameters, page['Parameters']))
         kv = {param['Name']: param['Value'] for param in parameters}
         return json.dumps(kv, indent=4, sort_keys=True)
 
