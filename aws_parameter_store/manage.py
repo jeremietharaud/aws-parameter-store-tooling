@@ -21,9 +21,15 @@ class ParameterStore:
 
     def delete_parameters(self, file):
         f = open(file, "r")
-        kv = json.load(f)
-        response = self.client.delete_parameters(Names=list(kv.keys()))
-        print("The following parameters have been deleted: ", response['DeletedParameters'])
+        try:
+            kv = json.load(f)
+            list_params = list(kv.keys())
+            for i in range(0, len(list_params), 10):
+                response = self.client.delete_parameters(Names=list_params[i:i+10])
+                print("The following parameters have been deleted: ", response['DeletedParameters'])
+        except Exception as e:
+            print(e)
+            exit(1)
 
     def get_parameter_value(self, param):
         response = self.client.get_parameter(Name=param, WithDecryption=True)
@@ -46,9 +52,10 @@ class ParameterStore:
                 print("Parameter %s has been added" % key)
                 return
             else:
-                raise e
+                print(e)
+                exit(1)
         if value == current_value and kms_key is None:
-            print("No update for", key)
+            print("No update for %s" % key)
         else:
             if kms_key is None:
                 if type(value) is list:
@@ -63,9 +70,13 @@ class ParameterStore:
 
     def put_parameters(self, file, kms_key):
         f = open(file, "r")
-        kv = json.load(f)
-        for key, value in kv.items():
-            self.put_parameter(key, value, kms_key)
+        try:
+            kv = json.load(f)
+            for key, value in kv.items():
+                self.put_parameter(key, value, kms_key)
+        except Exception as e:
+            print(e)
+            exit(1)
 
     def get_parameters_by_path(self, path='/'):
         paginator = self.client.get_paginator('get_parameters_by_path')

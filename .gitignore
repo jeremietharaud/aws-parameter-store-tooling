@@ -1,5 +1,3 @@
-tests/
-
 # Compiled python modules.
 *.pyc
 
