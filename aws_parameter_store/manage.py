@@ -11,14 +11,6 @@ class ParameterStore:
     def __init__(self):
         self.client = boto3.client('ssm')
 
-    def describe_parameters(self):
-        paginator = self.client.get_paginator('describe_parameters')
-        pages = paginator.paginate()
-        parameters = []
-        for page in pages:
-            parameters = np.concatenate((parameters, page['Parameters']))
-        return parameters
-
     def delete_parameters(self, file):
         f = open(file, "r")
         try:
@@ -82,10 +74,14 @@ class ParameterStore:
         paginator = self.client.get_paginator('get_parameters_by_path')
         pages = paginator.paginate(Path=path, Recursive=True, WithDecryption=True)
         parameters = []
-        for page in pages:
-            parameters = np.concatenate((parameters, page['Parameters']))
-        kv = {param['Name']: param['Value'] for param in parameters}
-        return json.dumps(kv, indent=4, sort_keys=True)
+        try:
+            for page in pages:
+                parameters = np.concatenate((parameters, page['Parameters']))
+            kv = {param['Name']: param['Value'] for param in parameters}
+            return json.dumps(kv, indent=4, sort_keys=True)
+        except Exception as e:
+            print(e)
+            exit(1)
 
 
 def main():
